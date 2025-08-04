@@ -1,0 +1,8 @@
+config VIDEO_OX05B1S
+	tristate "OmniVision OX05B1S support"
+	depends on OF
+	depends on GPIOLIB && VIDEO_V4L2_I2C && VIDEO_V4L2_SUBDEV_API
+	depends on MEDIA_CAMERA_SUPPORT
+	select V4L2_FWNODE
+	help
+	  V4L2 driver for the OmniVision OX05B1S RGB-IR sensor.

@@ -1,0 +1,24 @@
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index 80685ae78109..9fce78978c75 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -2888,6 +2888,7 @@ config VIDEO_SAA717X
+ 
+ source "drivers/media/i2c/cx25840/Kconfig"
+ source "drivers/media/i2c/it66353/Kconfig"
++source "drivers/media/i2c/ox05b1s/Kconfig"
+ 
+ endmenu
+ 
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index fa0325bc2326..f4ebed849cc7 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -196,6 +196,7 @@ obj-$(CONFIG_VIDEO_OV9282) += ov9282.o
+ obj-$(CONFIG_VIDEO_OV9640) += ov9640.o
+ obj-$(CONFIG_VIDEO_OV9650) += ov9650.o
+ obj-$(CONFIG_VIDEO_OV9734) += ov9734.o
++obj-$(CONFIG_VIDEO_OX05B1S) += ox05b1s/
+ obj-$(CONFIG_VIDEO_PREISP_DUMMY_SENSOR) += preisp-dummy.o
+ obj-$(CONFIG_VIDEO_RDACM20) += rdacm20.o
+ obj-$(CONFIG_VIDEO_RDACM21) += rdacm21.o
