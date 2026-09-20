@@ -1,0 +1,23 @@
+#!/bin/bash
+
+remove_dt_overlay() {
+	local overlay="ox05b1s.dtbo"
+	local overlays_dir="/boot/overlays"
+
+	echo "${overlay}:"
+	echo " - Remove:"
+	echo -n "   - Deleting from: ${overlays_dir}: "
+	if [ -f "${overlays_dir}/${overlay}" ]; then
+		rm "${overlays_dir}/${overlay}" &>/dev/null
+		if [ $? -eq 0 ]; then
+			echo "Okay"
+		else
+			echo "Failed"
+		fi
+	else
+		echo "Failed"
+	fi
+}
+
+remove_dt_overlay
+echo ""
