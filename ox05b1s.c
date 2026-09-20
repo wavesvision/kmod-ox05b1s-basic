@@ -10,8 +10,6 @@
  *   https://openbeagle.org/beagleboard/linux/-/raw/v6.1.80-ti-arm64-r56/drivers/media/i2c/ox05b1s.c?ref_type=heads
  */
 
-#define DEBUG
-
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
