@@ -1,0 +1,26 @@
+// Fragment that configures a Omnivision OX05B1S
+
+cam_node: ox05b1s@36 {
+	compatible = "ovti,ox05b1s";
+	reg = <0x36>;
+	status = "disabled";
+
+	clocks = <&cam1_clk>;
+	clock-names = "inck";
+
+	vsensor-supply = <&cam1_reg>;		/* Connected to XSHUTDOWN pin on sensor */
+
+	rotation = <0>;
+	orientation = <2>;
+
+	pwr_line_frequency = <60>;		/* Electrical supply frequency */
+
+	port {
+		cam_endpoint: endpoint {
+			clock-lanes = <0>;
+			data-lanes = <1 2>;
+			clock-noncontinuous;
+			link-frequencies = /bits/ 64 <450000000>;
+		};
+	};
+};
