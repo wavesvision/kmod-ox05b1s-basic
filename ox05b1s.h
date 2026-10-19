@@ -109,7 +109,7 @@
 #define OX05B1S_CFG_HBLANK			0
 #define OX05B1S_CFG_VBLANK			0
 #define OX05B1S_CFG_CAM_ORIENTATION		V4L2_CAMERA_ORIENTATION_EXTERNAL
-#define OX05B1S_CFG_PIXEL_RATE			120000000
+#define OX05B1S_CFG_PIXEL_RATE			192000000
 #define OX05B1S_CFG_LINK_FREQ_450M		450000000
 #define OX05B1S_CFG_LINK_FREQ_225M		225000000
 
@@ -191,6 +191,8 @@ struct ox05b1s_sensor {
 	struct v4l2_ctrl		*v4l2_light_freq;
 	struct v4l2_ctrl		*v4l2_hblank;
 	struct v4l2_ctrl		*v4l2_vblank;
+	struct v4l2_ctrl		*v4l2_orientation;
+	struct v4l2_ctrl		*v4l2_rotation;
 	struct v4l2_ctrl		*v4l2_pixel_rate;
 	struct v4l2_ctrl		*v4l2_link_freq;
 	struct v4l2_ctrl		*v4l2_hflip;
@@ -274,7 +276,7 @@ static const u16 ox05b1s_test_pattern_val[] = {
 
 /* V4L2 custom controls			*/
 /****************************************/
-#define OX05B1S_V4L2_CTRLS_MAX		12
+#define OX05B1S_V4L2_CTRLS_MAX		20
 
 #define V4L2_CID_OX05B1S_BASE			(V4L2_CTRL_CLASS_CAMERA | 0x2000)
 #define V4L2_CID_OX05B1S_AEC_TARGET		(V4L2_CID_OX05B1S_BASE + 0x0000)

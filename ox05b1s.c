@@ -58,13 +58,33 @@ static long __ox05b1s_get_link_frequency(struct ox05b1s_sensor *sensor)
 	return 0;
 }
 
+static u32 __ox05b1s_get_hblank(struct ox05b1s_sensor *sensor)
+{
+	unsigned int index = __ffs(sensor->link_freq_bitmap);
+	u32 hts;
+
+	if (index >= ARRAY_SIZE(ox05b1s_linkfreq_2_hts))
+		return 0;
+
+	/*
+	 * The sensor's HTS register is expressed in units of 8 pixels, while
+	 * V4L2_CID_HBLANK is expressed in pixels.
+	 */
+	hts = ox05b1s_linkfreq_2_hts[index] * 8;
+
+	if (hts <= sensor->current_mode->format.width)
+		return 0;
+
+	return hts - sensor->current_mode->format.width;
+}
+
 static unsigned long __ox05b1s_get_pixel_rate(struct ox05b1s_sensor *sensor)
 {
 	switch (sensor->num_lanes) {
 	case 2:
 		switch (__ox05b1s_get_link_frequency(sensor)) {
 		case OX05B1S_CFG_LINK_FREQ_450M:
-			return OX05B1S_CFG_PIXEL_RATE;
+			return OX05B1S_CFG_PIXEL_RATE * 2;
 		default:
 			dev_err(sensor->dev, "%s: invalid 2 MIPI lane link frequency\n", __func__);
 			return 0;
@@ -74,9 +94,8 @@ static unsigned long __ox05b1s_get_pixel_rate(struct ox05b1s_sensor *sensor)
 	case 4:
 		switch (__ox05b1s_get_link_frequency(sensor)) {
 		case OX05B1S_CFG_LINK_FREQ_450M:
-			return OX05B1S_CFG_PIXEL_RATE * 2;
 		case OX05B1S_CFG_LINK_FREQ_225M:
-			return OX05B1S_CFG_PIXEL_RATE;
+			return OX05B1S_CFG_PIXEL_RATE * 2;
 		default:
 			dev_err(sensor->dev, "%s: invalid 4 MIPI lane link frequency\n", __func__);
 			return 0;
@@ -369,7 +388,7 @@ static int __ox05b1s_stream_mode(struct ox05b1s_sensor *sensor)
 			break;
 		}
 		/* Set HTS */
-		if (__ffs(sensor->link_freq_bitmap) <= ARRAY_SIZE(ox05b1s_linkfreq_2_hts)) {
+		if (__ffs(sensor->link_freq_bitmap) < ARRAY_SIZE(ox05b1s_linkfreq_2_hts)) {
 			ret |= __ox05b1s_s_hblank(sensor, ox05b1s_linkfreq_2_hts[__ffs(sensor->link_freq_bitmap)]);
 		} else {
 			dev_err(sensor->dev, "%s: invalid link frequency bitmap\n", __func__);
@@ -396,7 +415,7 @@ static int __ox05b1s_stream_mode(struct ox05b1s_sensor *sensor)
 			break;
 		}
 		/* Set HTS */
-		if (__ffs(sensor->link_freq_bitmap) <= ARRAY_SIZE(ox05b1s_linkfreq_2_hts)) {
+		if (__ffs(sensor->link_freq_bitmap) < ARRAY_SIZE(ox05b1s_linkfreq_2_hts)) {
 			ret |= __ox05b1s_s_hblank(sensor, ox05b1s_linkfreq_2_hts[__ffs(sensor->link_freq_bitmap)]);
 		} else {
 			dev_err(sensor->dev, "%s: invalid link frequency bitmap\n", __func__);
@@ -905,6 +924,7 @@ static int __ox05b1s_init_controls(struct ox05b1s_sensor *sensor)
 	struct v4l2_ctrl_handler *ctrl_hdlr;
 	
 	int exposure_max, exposure_def;
+	u32 hblank, orientation, rotation;
 	int ret;
 
 	ctrl_hdlr = &sensor->ctrl_handler;
@@ -1098,6 +1118,56 @@ static int __ox05b1s_init_controls(struct ox05b1s_sensor *sensor)
 	if (ctrl_hdlr->error) {
 		ret = ctrl_hdlr->error;
 		dev_err(&sensor->client->dev, "failed to init V4L2 control: vertical blanking [%d]\n", ret);
+		goto __ox05b1s_init_controls_error_free_handler;
+	}
+
+	/*
+	 * Horizontal blanking is fixed by the sensor's selected link
+	 * frequency. Expose it as a read-only control so that libcamera can
+	 * retrieve the line length through V4L2_CID_HBLANK.
+	 */
+	hblank = __ox05b1s_get_hblank(sensor);
+	sensor->v4l2_hblank = v4l2_ctrl_new_std(ctrl_hdlr, &ox05b1s_ctrl_ops,
+						V4L2_CID_HBLANK,
+						hblank, hblank, 1, hblank);
+	if (sensor->v4l2_hblank)
+		sensor->v4l2_hblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	if (ctrl_hdlr->error) {
+		ret = ctrl_hdlr->error;
+		dev_err(&sensor->client->dev, "failed to init V4L2 control: horizontal blanking [%d]\n", ret);
+		goto __ox05b1s_init_controls_error_free_handler;
+	}
+
+	/* Expose the module orientation and mounting rotation from DT. */
+	if (of_property_read_u32(dev->of_node, "orientation", &orientation))
+		orientation = V4L2_CAMERA_ORIENTATION_EXTERNAL;
+	orientation = min(orientation, (u32)V4L2_CAMERA_ORIENTATION_EXTERNAL);
+
+	sensor->v4l2_orientation = v4l2_ctrl_new_std_menu(ctrl_hdlr,
+							  &ox05b1s_ctrl_ops,
+							  V4L2_CID_CAMERA_ORIENTATION,
+							  V4L2_CAMERA_ORIENTATION_EXTERNAL,
+							  0, orientation);
+	if (sensor->v4l2_orientation)
+		sensor->v4l2_orientation->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	if (ctrl_hdlr->error) {
+		ret = ctrl_hdlr->error;
+		dev_err(&sensor->client->dev, "failed to init V4L2 control: orientation [%d]\n", ret);
+		goto __ox05b1s_init_controls_error_free_handler;
+	}
+
+	if (of_property_read_u32(dev->of_node, "rotation", &rotation))
+		rotation = 0;
+	rotation = round_down(rotation, 90) % 360;
+
+	sensor->v4l2_rotation = v4l2_ctrl_new_std(ctrl_hdlr, &ox05b1s_ctrl_ops,
+						  V4L2_CID_CAMERA_SENSOR_ROTATION,
+						  rotation, rotation, 1, rotation);
+	if (sensor->v4l2_rotation)
+		sensor->v4l2_rotation->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	if (ctrl_hdlr->error) {
+		ret = ctrl_hdlr->error;
+		dev_err(&sensor->client->dev, "failed to init V4L2 control: rotation [%d]\n", ret);
 		goto __ox05b1s_init_controls_error_free_handler;
 	}
 

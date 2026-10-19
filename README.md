@@ -3,6 +3,19 @@
 ## Introduction
 This driver provides basic support for the OX05B1S sensor module on the RPi 5.
 
+## libcamera integration changes
+The following changes are required for the Raspberry Pi PiSP libcamera
+pipeline:
+
+* `V4L2_CID_HBLANK` is exposed as a read-only control. The line length is
+  derived from the selected link frequency; the 4-lane 450 MHz mode uses
+  2944 pixels per line (HTS `0x170` in units of 8 pixels), giving 352 pixels
+  of horizontal blanking for a 2592-pixel-wide image.
+* `V4L2_CID_PIXEL_RATE` reports 384 MHz. The previous 240 MHz value made the
+  IPA compute incorrect exposure and frame duration limits.
+* `V4L2_CID_CAMERA_ORIENTATION` and `V4L2_CID_CAMERA_SENSOR_ROTATION` are
+  exposed from the `orientation` and `rotation` device tree properties.
+
 ## Requirements
 This driver has been developed to be installed using DKMS on the Raspberry Pi.
 So first install dkms:
