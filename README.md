@@ -18,9 +18,10 @@ pipeline:
 
 ## Requirements
 This driver has been developed to be installed using DKMS on the Raspberry Pi.
-So first install dkms:
+Install the build tools and kernel headers first:
 ```
-sudo apt-get install dkms
+sudo apt-get install dkms build-essential device-tree-compiler
+sudo apt-get install raspberrypi-kernel-headers || sudo apt-get install linux-headers-$(uname -r)
 ```
 
 ## Installation
