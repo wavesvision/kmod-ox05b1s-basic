@@ -533,10 +533,10 @@ static const struct v4l2_subdev_video_ops ox05b1s_video_ops = {
  * - h&v flips
  */
 static const u32 ox05b1s_mbus_formats[] = {
-	MEDIA_BUS_FMT_SBGGR10_1X10,			/* No h/v flip */
+	MEDIA_BUS_FMT_SRGGB10_1X10,			/* No h/v flip */
 	MEDIA_BUS_FMT_SGRBG10_1X10,			/* Horizontal flip */
 	MEDIA_BUS_FMT_SGBRG10_1X10,			/* Vertical flip */
-	MEDIA_BUS_FMT_SRGGB10_1X10,			/* Horizontal & vertical flip */
+	MEDIA_BUS_FMT_SBGGR10_1X10,			/* Horizontal & vertical flip */
 };
 
 /* Get bayer format based on flip setting. */

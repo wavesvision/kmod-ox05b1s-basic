@@ -351,7 +351,7 @@ static const struct ox05b1s_mode ox05b1s_supported_modes[] = {
 	
 	{
 		.format		= {
-					.code		= MEDIA_BUS_FMT_SGRBG10_1X10,
+					.code		= MEDIA_BUS_FMT_SRGGB10_1X10,
 					.colorspace	= V4L2_COLORSPACE_RAW,
 					.field		= V4L2_FIELD_NONE,
 					.width		= OX05B1S_SENSOR_PIXEL_ARRAY_WIDTH,
