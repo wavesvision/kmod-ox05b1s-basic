@@ -132,7 +132,7 @@ static const s64 ox05b1s_link_freq_menu[] = {
 
 static const int ox05b1s_linkfreq_2_hts[] = {
 	0x2f0,					// 30 FPS
-	0x170,					// 60 FPS
+	0x178,					// 60 FPS
 };
 
 
