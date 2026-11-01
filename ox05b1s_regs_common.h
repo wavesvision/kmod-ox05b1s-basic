@@ -1065,7 +1065,7 @@ static const struct cci_reg_sequence ox05b1s_linear_common[] = {
 	{ CCI_REG8(0x3804), 0x0a }, 
 	{ CCI_REG8(0x3805), 0x2f }, 
 	{ CCI_REG8(0x3806), 0x07 }, 
-	{ CCI_REG8(0x3807), 0xaf }, 
+	{ CCI_REG8(0x3807), 0xa7 }, 
 
 
 
