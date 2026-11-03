@@ -9,7 +9,7 @@ pipeline:
 
 * `V4L2_CID_HBLANK` is exposed as a read-only control. The line length is
   derived from the selected link frequency; the 4-lane 450 MHz mode uses
-  2944 pixels per line (HTS `0x170` in units of 8 pixels), giving 352 pixels
+  3008 pixels per line (HTS `0x178` in units of 8 pixels), giving 416 pixels
   of horizontal blanking for a 2592-pixel-wide image.
 * `V4L2_CID_PIXEL_RATE` reports 384 MHz. The previous 240 MHz value made the
   IPA compute incorrect exposure and frame duration limits.
@@ -76,5 +76,5 @@ Check that the sensor exposes the libcamera timing controls:
 v4l2-ctl -d /dev/v4l-subdevN --list-ctrls
 ```
 Use the `ox05b1s` subdevice from `media-ctl -p -d /dev/media0`. The expected
-values include `horizontal_blanking = 352`, `pixel_rate = 384000000` and
+values include `horizontal_blanking = 416`, `pixel_rate = 384000000` and
 `link_frequency = 450000000`.

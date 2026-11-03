@@ -638,12 +638,6 @@ static int ox05b1s_set_pad_format(struct v4l2_subdev *sd,
 					 pixel_rate, 1, pixel_rate);
 	}
 
-	/* Update selected link frequency */
-	for (int i = 0; i < ARRAY_SIZE(ox05b1s_link_freq_menu); i++) {
-		if (__ox05b1s_get_link_frequency(sensor) == ox05b1s_link_freq_menu[i])
-			__v4l2_ctrl_s_ctrl(sensor->v4l2_link_freq, i);
-	}
-
 	return 0;
 }
 
@@ -810,9 +804,9 @@ static int ox05b1s_set_ctrl(struct v4l2_ctrl *ctrl)
 
 	/*
 	 * Applying V4L2 control value only happens
-	 * when power is up for streaming
-	 */
-	if (pm_runtime_get_if_in_use(&client->dev) == 0)
+	 * when power is up for streaming.
+	 -EINVAL runtime PM disabled; 0 runtime not in use */
+	if (pm_runtime_get_if_in_use(&client->dev) <= 0)
 		return 0;
 
 	switch (ctrl->id) {
@@ -862,6 +856,7 @@ static int ox05b1s_set_ctrl(struct v4l2_ctrl *ctrl)
 		break;
 
 	/* Read-only, but we adjust it based on mode. */
+	case V4L2_CID_LINK_FREQ:
 	case V4L2_CID_PIXEL_RATE:
 	case V4L2_CID_HBLANK:
 		/* Read-only, but we adjust it based on mode. */
@@ -925,6 +920,7 @@ static int __ox05b1s_init_controls(struct ox05b1s_sensor *sensor)
 	
 	int exposure_max, exposure_def;
 	u32 hblank, orientation, rotation;
+	unsigned int i, link_freq_idx = 0;
 	int ret;
 
 	ctrl_hdlr = &sensor->ctrl_handler;
@@ -1097,10 +1093,16 @@ static int __ox05b1s_init_controls(struct ox05b1s_sensor *sensor)
 		goto __ox05b1s_init_controls_error_free_handler;
 	}
 
-	/* Link frequency */
+	/*
+	 * Link frequency: fixed by the device tree at probe and is a read-only control
+	 */
+	for (i = 0; i < ARRAY_SIZE(ox05b1s_link_freq_menu); i++)
+		if (ox05b1s_link_freq_menu[i] == __ox05b1s_get_link_frequency(sensor))
+			link_freq_idx = i;
 	sensor->v4l2_link_freq = v4l2_ctrl_new_int_menu(ctrl_hdlr, &ox05b1s_ctrl_ops,
 							V4L2_CID_LINK_FREQ,
-							ARRAY_SIZE(ox05b1s_link_freq_menu) - 1, 0,
+							ARRAY_SIZE(ox05b1s_link_freq_menu) - 1,
+							link_freq_idx,
 							ox05b1s_link_freq_menu);
 	if (sensor->v4l2_link_freq)
 		sensor->v4l2_link_freq->flags |= V4L2_CTRL_FLAG_READ_ONLY;
